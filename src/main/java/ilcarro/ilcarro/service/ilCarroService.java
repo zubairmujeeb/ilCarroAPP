@@ -60,4 +60,8 @@ public interface ilCarroService {
 
 	Page<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate,
 			double minAmount, double maxAmount, boolean ascending, int itemOnPage, int currentPage) throws IlcarroException;
+
+	List<CarResponseDto> searchCarsByCoordinates(float latitude, float longitude, float radius, int itemOnPage,
+			int currentPage) throws IlcarroException;
+
 }

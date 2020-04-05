@@ -7,9 +7,12 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.LimitOperation;
@@ -132,5 +135,18 @@ public class CustomRepositoryImpl implements CustomRepository {
 						.getMappedResults(),
 				pageable, total);
 
+	}
+
+	@Override
+	public List<UserMongo> searchCarByCoordinates(float latitude, float longitude, float radius, int itemOnPage,
+			int currentPage) throws ParseException {
+		Point basePoint = new Point(latitude, longitude);
+		Circle area = new Circle(basePoint, radius);
+		Query query = new Query();
+		query.addCriteria(Criteria.where("ownCars.pickUpPlace").withinSphere(area));
+		query.fields().include("ownCars");
+		final Pageable pageableRequest = PageRequest.of(currentPage, itemOnPage);
+		query.with(pageableRequest);
+		return mongoTemplate.find(query, UserMongo.class);
 	}
 }

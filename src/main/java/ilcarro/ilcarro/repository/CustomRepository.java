@@ -19,4 +19,7 @@ public interface CustomRepository {
 
 	Page<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate, double minAmount,
 			double maxAmount, boolean ascending, Pageable pageable) throws ParseException;
+	
+	List<UserMongo> searchCarByCoordinates(float latitude, float longitude, float radius, int itemOnPage,
+			int currentPage) throws ParseException;
 }

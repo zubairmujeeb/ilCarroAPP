@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ilcarro.ilcarro.api.ilCarroReturnCode;
 import ilcarro.ilcarro.dto.Comment;
+import ilcarro.ilcarro.dto.Location;
 import ilcarro.ilcarro.dto.Renter;
 import ilcarro.ilcarro.dto.bookingDto.BookedCarDto;
 import ilcarro.ilcarro.dto.bookingDto.BookedPeriodDto;
@@ -506,5 +508,50 @@ public class ilCarroImpl implements ilCarroService {
 		} catch (ParseException e) {
 			throw new IlcarroException();
 		}
+	}
+	
+	@Override
+	public List<CarResponseDto> searchCarsByCoordinates(float latitude, float longitude, float radius, int itemOnPage,
+			int currentPage) throws IlcarroException {
+
+		try {
+
+			List<UserMongo> carByCoordinates = ilCarroRepository.searchCarByCoordinates(latitude, longitude, radius,
+					itemOnPage, currentPage);
+			List<CarResponseDto> results = null;
+			for (UserMongo carOwner : carByCoordinates) {
+
+				OwnerDto owner = new OwnerDto();
+				BeanUtils.copyProperties(carOwner, owner);
+				results = carOwner.getOwnCars().stream().map(ownCar -> {
+
+					CarResponseDto car = new CarResponseDto();
+					Location pickUpPlace = new Location();
+					BeanUtils.copyProperties(ownCar.getPickUpPlace(), pickUpPlace);
+
+					car.setPickUpPlace(pickUpPlace);
+
+					List<BookedPeriodDto> bookedPeriods = ownCar.getBookedPeriod().stream().map(bp -> {
+						BookedPeriodDto bookedPeriod = new BookedPeriodDto();
+						BeanUtils.copyProperties(bp, bookedPeriod);
+						return bookedPeriod;
+					}).collect(Collectors.toList());
+
+					BeanUtils.copyProperties(ownCar, car);
+					car.setBookedPeriod(bookedPeriods);
+					car.setOwner(owner);
+					car.setPickUpPlace(pickUpPlace);
+					return car;
+				}).collect(Collectors.toList());
+
+			}
+
+			return results;
+
+		} catch (ParseException e) {
+
+			throw new IlcarroException();
+		}
+
 	}
 }

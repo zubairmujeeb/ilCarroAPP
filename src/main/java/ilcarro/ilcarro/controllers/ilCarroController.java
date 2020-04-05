@@ -192,4 +192,24 @@ public class ilCarroController {
 		return responseEntity;
 
 	}
+	
+	
+	@RequestMapping(value = "/search/geo", method = RequestMethod.GET)
+	public ResponseEntity<?> serachCarbyCoordinates(@RequestParam(name = "latitude", defaultValue = "0") float latitude,
+			@RequestParam(name = "longitude") float longitude, @RequestParam(name = "radius") float radius,
+			@RequestParam(name = "itemOnPage", defaultValue = "0") int itemOnPage,
+			@RequestParam(name = "currentPage", defaultValue = "0") int currentPage) throws IlcarroException {
+		ResponseEntity<?> responseEntity;
+		try {
+			List<CarResponseDto> dataList = ilCarroService.searchCarsByCoordinates(latitude, longitude, radius,
+					itemOnPage, currentPage);
+			responseEntity = new ResponseEntity<>(dataList, HttpStatus.OK);
+		} catch (IlcarroException e) {
+			log.error(e.getMessage(), e);
+			responseEntity = new ResponseEntity<>(
+					new ErrorMessage(String.valueOf(e.getErrorCode()), e.getErrorMessage()), e.getHttpStatus());
+		}
+		return responseEntity;
+
+	}
 }
