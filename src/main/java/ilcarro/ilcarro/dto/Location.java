@@ -1,53 +1,49 @@
 package ilcarro.ilcarro.dto;
 
-import org.springframework.data.mongodb.core.mapping.Field;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Location {
 //	@Field("placeId")
-    private String placeId;
-    private float latitude;
-    private float longitude;
+	private String placeId;
+	private float latitude;
+	private float longitude;
 
-    public Location(String placeId, float latitude, float longitude) {
-        this.placeId = placeId;
-        this.latitude = latitude;
-        this.longitude = longitude;
-    }
+	public Location(String placeId, float latitude, float longitude) {
+		this.placeId = placeId;
+		this.latitude = latitude;
+		this.longitude = longitude;
+	}
 
-    public Location() {
-    }
+	public Location() {
+	}
 
-    public String getPlaceId() {
-        return placeId;
-    }
+	public String getPlaceId() {
+		return placeId;
+	}
 
-    public void setPlaceId(String placeId) {
-        this.placeId = placeId;
-    }
+	public void setPlaceId(String placeId) {
+		this.placeId = placeId;
+	}
 
-    public float getLatitude() {
-        return latitude;
-    }
+	public float getLatitude() {
+		return latitude;
+	}
 
-    public void setLatitude(float latitude) {
-        this.latitude = latitude;
-    }
+	public void setLatitude(float latitude) {
+		this.latitude = latitude;
+	}
 
-    public float getLongitude() {
-        return longitude;
-    }
+	public float getLongitude() {
+		return longitude;
+	}
 
-    public void setLongitude(float longitude) {
-        this.longitude = longitude;
-    }
+	public void setLongitude(float longitude) {
+		this.longitude = longitude;
+	}
 
-    @Override
-    public String toString() {
-        return "Location{" +
-                "placeId='" + placeId + '\'' +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
-                '}';
-    }
+	@Override
+	public String toString() {
+		return "Location{" + "placeId='" + placeId + '\'' + ", latitude=" + latitude + ", longitude=" + longitude + '}';
+	}
 }
-

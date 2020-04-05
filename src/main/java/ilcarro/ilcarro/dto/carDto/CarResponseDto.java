@@ -2,9 +2,12 @@ package ilcarro.ilcarro.dto.carDto;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import ilcarro.ilcarro.dto.Location;
 import ilcarro.ilcarro.dto.bookingDto.BookedPeriodDto;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CarResponseDto {
 	private String serialNumber;
 	private String make;
@@ -204,6 +207,14 @@ public class CarResponseDto {
 		this.bookedPeriod = bookedPeriod;
 	}
 
+	public OwnerDto getOwner() {
+		return owner;
+	}
+
+	public void setOwner(OwnerDto owner) {
+		this.owner = owner;
+	}
+
 	public CarResponseDto() {
 	}
 
@@ -217,11 +228,4 @@ public class CarResponseDto {
 				+ ", pickUpPlace=" + pickUpPlace + ", imageUrl=" + imageUrl + ", bookedPeriod=" + bookedPeriod + '}';
 	}
 
-	public OwnerDto getOwner() {
-		return owner;
-	}
-
-	public void setOwner(OwnerDto owner) {
-		this.owner = owner;
-	}
 }

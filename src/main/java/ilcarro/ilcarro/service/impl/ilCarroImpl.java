@@ -499,38 +499,8 @@ public class ilCarroImpl implements ilCarroService {
 			throws IlcarroException {
 
 		try {
-			List<UserMongo> carOwners = ilCarroRepository.searchCarAgainstBookedPeriod(city, startDate, endDate,
-					minAmount, maxAmount, ascending, itemOnPage, currentPage);
-
-			List<CarResponseDto> results = null;
-			for (UserMongo carOwner : carOwners) {
-
-				OwnerDto owner = new OwnerDto();
-				BeanUtils.copyProperties(carOwner, owner);
-				results = carOwner.getOwnCars().stream().map(ownCar -> {
-
-					CarResponseDto car = new CarResponseDto();
-					Location pickUpPlace = new Location();
-					BeanUtils.copyProperties(ownCar.getPickUpPlace(), pickUpPlace);
-
-					car.setPickUpPlace(pickUpPlace);
-
-					List<BookedPeriodDto> bookedPeriods = ownCar.getBookedPeriod().stream().map(bp -> {
-						BookedPeriodDto bookedPeriod = new BookedPeriodDto();
-						BeanUtils.copyProperties(bp, bookedPeriod);
-						return bookedPeriod;
-					}).collect(Collectors.toList());
-
-					BeanUtils.copyProperties(ownCar, car);
-					car.setBookedPeriod(bookedPeriods);
-					car.setOwner(owner);
-					car.setPickUpPlace(pickUpPlace);
-					return car;
-				}).collect(Collectors.toList());
-
-			}
-
-			return results;
+			return ilCarroRepository.searchCarAgainstBookedPeriod(city, startDate, endDate, minAmount, maxAmount,
+					ascending, itemOnPage, currentPage);
 		} catch (ParseException e) {
 			throw new IlcarroException();
 		}

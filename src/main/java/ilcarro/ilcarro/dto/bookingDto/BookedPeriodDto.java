@@ -1,105 +1,104 @@
 package ilcarro.ilcarro.dto.bookingDto;
 
+import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import ilcarro.ilcarro.dto.Renter;
 
-import java.time.LocalDate;
-import java.util.Date;
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BookedPeriodDto {
-    private long order_id;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private boolean paid;
-    private float amount;
-    private LocalDate bookingDate;
-    private Renter personWhoBooked;
+	private Long order_id;
+	private LocalDate startDate;
+	private LocalDate endDate;
+	private Boolean paid;
+	private Float amount;
+	private LocalDate bookingDate;
+	private Renter personWhoBooked;
 
-    public BookedPeriodDto(LocalDate startDate, LocalDate endDate) {
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
+	public BookedPeriodDto(LocalDate startDate, LocalDate endDate) {
+		this.startDate = startDate;
+		this.endDate = endDate;
+	}
 
-    public BookedPeriodDto(long order_id, LocalDate startDate, LocalDate endDate, boolean paid, float amount, LocalDate bookingDate) {
-        this.order_id = order_id;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.paid = paid;
-        this.amount = amount;
-        this.bookingDate = bookingDate;
-    }
+	public BookedPeriodDto(long order_id, LocalDate startDate, LocalDate endDate, boolean paid, float amount,
+			LocalDate bookingDate) {
+		this.order_id = order_id;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.paid = paid;
+		this.amount = amount;
+		this.bookingDate = bookingDate;
+	}
 
-    public BookedPeriodDto(long order_id,
-                           LocalDate startDate,
-                           LocalDate endDate,
-                           boolean paid,
-                           float amount,
-                           LocalDate bookingDate,
-                           Renter personWhoBooked) {
-        this.order_id = order_id;
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.paid = paid;
-        this.amount = amount;
-        this.bookingDate = bookingDate;
-        this.personWhoBooked = personWhoBooked;
-    }
+	public BookedPeriodDto(long order_id, LocalDate startDate, LocalDate endDate, boolean paid, float amount,
+			LocalDate bookingDate, Renter personWhoBooked) {
+		this.order_id = order_id;
+		this.startDate = startDate;
+		this.endDate = endDate;
+		this.paid = paid;
+		this.amount = amount;
+		this.bookingDate = bookingDate;
+		this.personWhoBooked = personWhoBooked;
+	}
 
-    public BookedPeriodDto() {
-    }
+	public BookedPeriodDto() {
+	}
 
-    public Renter getPersonWhoBooked() {
-        return personWhoBooked;
-    }
+	public Long getOrder_id() {
+		return order_id;
+	}
 
-    public void setPersonWhoBooked(Renter personWhoBooked) {
-        this.personWhoBooked = personWhoBooked;
-    }
+	public void setOrder_id(Long order_id) {
+		this.order_id = order_id;
+	}
 
-    public long getOrder_id() {
-        return order_id;
-    }
+	public LocalDate getStartDate() {
+		return startDate;
+	}
 
-    public void setOrder_id(long order_id) {
-        this.order_id = order_id;
-    }
+	public void setStartDate(LocalDate startDate) {
+		this.startDate = startDate;
+	}
 
-    public LocalDate getStartDate() {
-        return startDate;
-    }
+	public LocalDate getEndDate() {
+		return endDate;
+	}
 
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
+	public void setEndDate(LocalDate endDate) {
+		this.endDate = endDate;
+	}
 
-    public LocalDate getEndDate() {
-        return endDate;
-    }
+	public Boolean getPaid() {
+		return paid;
+	}
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
+	public void setPaid(Boolean paid) {
+		this.paid = paid;
+	}
 
-    public boolean isPaid() {
-        return paid;
-    }
+	public Float getAmount() {
+		return amount;
+	}
 
-    public void setPaid(boolean paid) {
-        this.paid = paid;
-    }
+	public void setAmount(Float amount) {
+		this.amount = amount;
+	}
 
-    public float getAmount() {
-        return amount;
-    }
+	public LocalDate getBookingDate() {
+		return bookingDate;
+	}
 
-    public void setAmount(float amount) {
-        this.amount = amount;
-    }
+	public void setBookingDate(LocalDate bookingDate) {
+		this.bookingDate = bookingDate;
+	}
 
-    public LocalDate getBookingDate() {
-        return bookingDate;
-    }
+	public Renter getPersonWhoBooked() {
+		return personWhoBooked;
+	}
 
-    public void setBookingDate(LocalDate bookingDate) {
-        this.bookingDate = bookingDate;
-    }
+	public void setPersonWhoBooked(Renter personWhoBooked) {
+		this.personWhoBooked = personWhoBooked;
+	}
+
 }

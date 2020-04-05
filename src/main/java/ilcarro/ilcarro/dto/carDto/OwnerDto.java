@@ -1,5 +1,8 @@
 package ilcarro.ilcarro.dto.carDto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OwnerDto {
 	private String firstName;
 	private String secondName;
