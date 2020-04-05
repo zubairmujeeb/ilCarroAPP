@@ -6,6 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -170,16 +171,17 @@ public class ilCarroController {
 	}
 
 	@RequestMapping(value = "/search", method = RequestMethod.GET)
-	public ResponseEntity<?> serachCarAgainstBookedPeriod(@RequestParam(name = "city", defaultValue = "0") String city,
-			@RequestParam(name = "startDate") String startDate, @RequestParam(name = "endDate") String endDate,
+	public ResponseEntity<?> serachCarAgainstBookedPeriod(@RequestParam(name = "city", defaultValue = "") String city,
+			@RequestParam(name = "startDate", required = true) String startDate,
+			@RequestParam(name = "endDate", required = true) String endDate,
 			@RequestParam(name = "minAmount", defaultValue = "0") double minAmount,
 			@RequestParam(name = "maxAmount", defaultValue = "0") double maxAmount,
 			@RequestParam(name = "ascending", defaultValue = "true") boolean ascending,
-			@RequestParam(name = "itemOnPage", defaultValue = "0") int itemOnPage,
-			@RequestParam(name = "currentPage", defaultValue = "0") int currentPage) throws IlcarroException {
+			@RequestParam(name = "itemOnPage", defaultValue = "10") int itemOnPage,
+			@RequestParam(name = "currentPage", defaultValue = "1") int currentPage) throws IlcarroException {
 		ResponseEntity<?> responseEntity;
 		try {
-			List<CarResponseDto> dataList = ilCarroService.searchCarAgainstBookedPeriod(city, startDate, endDate,
+			Page<CarResponseDto> dataList = ilCarroService.searchCarAgainstBookedPeriod(city, startDate, endDate,
 					minAmount, maxAmount, ascending, itemOnPage, currentPage);
 			responseEntity = new ResponseEntity<>(dataList, HttpStatus.OK);
 		} catch (IlcarroException e) {

@@ -2,6 +2,8 @@ package ilcarro.ilcarro.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 import ilcarro.ilcarro.api.ilCarroReturnCode;
 import ilcarro.ilcarro.dto.Comment;
 import ilcarro.ilcarro.dto.bookingDto.BookedPeriodDto;
@@ -56,6 +58,6 @@ public interface ilCarroService {
 	List<CarResponseOwnerDto> findByBookedPeriod(String city, String startDate, String endDate, String minAmount,
 			String maxAmount, String ascending, String itemOnPage, String currentPage);
 
-	List<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate,
+	Page<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate,
 			double minAmount, double maxAmount, boolean ascending, int itemOnPage, int currentPage) throws IlcarroException;
 }

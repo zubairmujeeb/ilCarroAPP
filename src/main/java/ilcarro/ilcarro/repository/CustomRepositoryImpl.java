@@ -5,16 +5,24 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.LimitOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
+import org.springframework.data.mongodb.core.aggregation.SkipOperation;
+import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.aggregation.UnwindOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 import ilcarro.ilcarro.dto.Comment;
+import ilcarro.ilcarro.dto.CountDto;
 import ilcarro.ilcarro.dto.carDto.CarResponseDto;
 import ilcarro.ilcarro.entities.UserMongo;
 
@@ -67,9 +75,8 @@ public class CustomRepositoryImpl implements CustomRepository {
 //	}
 
 	@Override
-	public List<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate,
-			double minAmount, double maxAmount, boolean ascending, int itemOnPage, int currentPage)
-			throws ParseException {
+	public Page<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate,
+			double minAmount, double maxAmount, boolean ascending, Pageable pageable) throws ParseException {
 
 		SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
 
@@ -79,10 +86,33 @@ public class CustomRepositoryImpl implements CustomRepository {
 				Criteria.where("ownCars.bookedPeriod.startDate").gte(sdf.parse(startDate)),
 				Criteria.where("ownCars.bookedPeriod.endDate").lte(sdf.parse(endDate)));
 
-		Criteria amountCriteria = Criteria.where("bookedPeriod.amount").lt(maxAmount).gt(minAmount);
+		Criteria amountCriteria = null;
 
-		MatchOperation matchOperation = Aggregation.match(new Criteria()
-				.orOperator(Criteria.where("ownCars.pickUpPlace.placeId").is(city), dateCriteria, amountCriteria));
+		if (maxAmount > 0 || minAmount > 0) {
+
+			amountCriteria = Criteria.where("bookedPeriod.amount");
+			if (maxAmount > 0)
+				amountCriteria.lte(maxAmount);
+			if (minAmount > 0)
+				amountCriteria.gte(minAmount);
+		}
+
+		Criteria finalCriteria = amountCriteria != null
+				? new Criteria().orOperator(Criteria.where("ownCars.pickUpPlace.placeId").regex(city), dateCriteria,
+						amountCriteria)
+				: new Criteria().orOperator(Criteria.where("ownCars.pickUpPlace.placeId").regex(city), dateCriteria);
+
+		MatchOperation matchOperation = Aggregation.match(finalCriteria);
+
+		SkipOperation skipOperation = Aggregation.skip((long) pageable.getPageNumber() * pageable.getPageSize());
+		LimitOperation limitOperation = Aggregation.limit(pageable.getPageSize());
+		SortOperation sortOperation = Aggregation.sort(ascending ? Direction.ASC : Direction.DESC,
+				"$ownCars.serialNumber");
+
+		Long total = mongoTemplate
+				.aggregate(Aggregation.newAggregation(unwindOperation, matchOperation, Aggregation.count().as("count"),
+						Aggregation.project("count").andExclude("_id")), UserMongo.class, CountDto.class)
+				.getMappedResults().get(0).getCount();
 
 		ProjectionOperation projectOperation = Aggregation
 				.project("$ownCars.serialNumber", "$ownCars.make", "$ownCars.model", "$ownCars.year", "$ownCars.engine",
@@ -93,8 +123,14 @@ public class CustomRepositoryImpl implements CustomRepository {
 				.and("firstName").as("owner.firstName").and("secondName").as("owner.secondName").and("registrationDate")
 				.as("owner.registrationDate");
 
-		return mongoTemplate.aggregate(Aggregation.newAggregation(unwindOperation, matchOperation, projectOperation),
-				UserMongo.class, CarResponseDto.class).getMappedResults();
+		return new PageImpl<CarResponseDto>(
+				mongoTemplate
+						.aggregate(
+								Aggregation.newAggregation(unwindOperation, matchOperation, skipOperation,
+										limitOperation, sortOperation, projectOperation),
+								UserMongo.class, CarResponseDto.class)
+						.getMappedResults(),
+				pageable, total);
 
 	}
 }

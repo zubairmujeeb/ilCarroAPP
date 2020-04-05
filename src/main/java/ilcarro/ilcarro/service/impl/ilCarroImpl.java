@@ -13,8 +13,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,7 +26,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ilcarro.ilcarro.api.ilCarroReturnCode;
 import ilcarro.ilcarro.dto.Comment;
-import ilcarro.ilcarro.dto.Location;
 import ilcarro.ilcarro.dto.Renter;
 import ilcarro.ilcarro.dto.bookingDto.BookedCarDto;
 import ilcarro.ilcarro.dto.bookingDto.BookedPeriodDto;
@@ -494,13 +495,14 @@ public class ilCarroImpl implements ilCarroService {
 	}
 
 	@Override
-	public List<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate,
+	public Page<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate,
 			double minAmount, double maxAmount, boolean ascending, int itemOnPage, int currentPage)
 			throws IlcarroException {
 
+		Pageable pageable = PageRequest.of(currentPage - 1, itemOnPage);
 		try {
 			return ilCarroRepository.searchCarAgainstBookedPeriod(city, startDate, endDate, minAmount, maxAmount,
-					ascending, itemOnPage, currentPage);
+					ascending, pageable);
 		} catch (ParseException e) {
 			throw new IlcarroException();
 		}

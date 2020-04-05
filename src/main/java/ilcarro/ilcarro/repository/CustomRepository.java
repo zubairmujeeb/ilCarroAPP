@@ -3,6 +3,9 @@ package ilcarro.ilcarro.repository;
 import java.text.ParseException;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import ilcarro.ilcarro.dto.Comment;
 import ilcarro.ilcarro.dto.carDto.CarResponseDto;
 import ilcarro.ilcarro.entities.UserMongo;
@@ -14,6 +17,6 @@ public interface CustomRepository {
 //    List<UserMongo> findByCommentsPostDate();
 	List<Comment> getLatestComments();
 
-	List<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate, double minAmount,
-			double maxAmount, boolean ascending, int itemOnPage, int currentPage) throws ParseException;
+	Page<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate, double minAmount,
+			double maxAmount, boolean ascending, Pageable pageable) throws ParseException;
 }
