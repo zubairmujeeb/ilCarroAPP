@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.databind.jsontype.impl.AsExistingPropertyTypeSerializer;
 
 import ilcarro.ilcarro.api.ilCarroReturnCode;
 import ilcarro.ilcarro.constant.IlCarroConstant;
@@ -192,8 +195,7 @@ public class ilCarroController {
 		return responseEntity;
 
 	}
-	
-	
+
 	@RequestMapping(value = "/search/geo", method = RequestMethod.GET)
 	public ResponseEntity<?> serachCarbyCoordinates(@RequestParam(name = "latitude", defaultValue = "0") float latitude,
 			@RequestParam(name = "longitude") float longitude, @RequestParam(name = "radius") float radius,
@@ -212,4 +214,29 @@ public class ilCarroController {
 		return responseEntity;
 
 	}
+
+	@RequestMapping(value = "/search/filter", method = RequestMethod.GET)
+	public ResponseEntity<?> serachCarbyfilters(@RequestParam(name = "make", defaultValue = "0") String make,
+			@RequestParam(name = "model") String model, @RequestParam(name = "year") String year,
+			@RequestParam(name = "engine", defaultValue = "0") String engine,
+			@RequestParam(name = "fuel", defaultValue = "0") String fuel,
+			@RequestParam(name = "gear", defaultValue = "0") String gear,
+			@RequestParam(name = "wheels_drive", defaultValue = "0") String wheelDrive,
+			@RequestParam(name = "itemOnPage", defaultValue = "0") int itemOnPage,
+			@RequestParam(name = "currentPage", defaultValue = "0") int currentPage,
+			@RequestParam(name = "ascending", defaultValue = "true") Boolean ascending ) throws IlcarroException {
+		ResponseEntity<?> responseEntity;
+		try {
+			List<CarResponseDto>  dataList = ilCarroService.searchCarsbyFilter(make, model, year, engine, fuel, gear,
+					wheelDrive, itemOnPage, currentPage, ascending);
+			responseEntity = new ResponseEntity<>(dataList, HttpStatus.OK);
+		} catch (IlcarroException e) {
+			log.error(e.getMessage(), e);
+			responseEntity = new ResponseEntity<>(
+					new ErrorMessage(String.valueOf(e.getErrorCode()), e.getErrorMessage()), e.getHttpStatus());
+		}
+		return responseEntity;
+
+	}
+
 }

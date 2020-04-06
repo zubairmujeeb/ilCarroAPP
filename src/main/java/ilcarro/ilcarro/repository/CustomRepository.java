@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import ilcarro.ilcarro.dto.Comment;
@@ -22,4 +23,7 @@ public interface CustomRepository {
 	
 	List<UserMongo> searchCarByCoordinates(float latitude, float longitude, float radius, int itemOnPage,
 			int currentPage) throws ParseException;
+	
+	List<CarResponseDto> searchCarByFilters(String make, String model, String year, String engine, String fuel,
+			String gear, String wheelDrive, Pageable pageable, Boolean ascending) throws ParseException;
 }

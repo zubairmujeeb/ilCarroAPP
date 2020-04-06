@@ -29,6 +29,10 @@ public class CarResponseDto {
 	private List<String> imageUrl;
 	private List<BookedPeriodDto> bookedPeriod;
 	private OwnerDto owner;
+	private CarFilterDto filter;
+	private String totalItems;
+	private Integer currentPage;
+	private Integer itemOnPage;
 
 	public CarResponseDto(String serialNumber, String make, String model, int year, String engine, String fuel,
 			String gear, String wheelsDrive, int doors, int seats, float fuelConsumption, List<String> features,
@@ -218,6 +222,39 @@ public class CarResponseDto {
 	public CarResponseDto() {
 	}
 
+	public CarFilterDto getFilter() {
+		return filter;
+	}
+
+	public void setFilter(CarFilterDto filter) {
+		this.filter = filter;
+	}
+
+	public String getTotalItems() {
+		return totalItems;
+	}
+
+	public void setTotalItems(String totalItems) {
+		this.totalItems = totalItems;
+	}
+
+
+	public Integer getCurrentPage() {
+		return currentPage;
+	}
+
+	public void setCurrentPage(Integer currentPage) {
+		this.currentPage = currentPage;
+	}
+
+	public Integer getItemOnPage() {
+		return itemOnPage;
+	}
+
+	public void setItemOnPage(Integer itemOnPage) {
+		this.itemOnPage = itemOnPage;
+	}
+
 	@Override
 	public String toString() {
 		return "CarResponseDto{" + "serialNumber='" + serialNumber + '\'' + ", make='" + make + '\'' + ", model='"
@@ -225,7 +262,8 @@ public class CarResponseDto {
 				+ gear + '\'' + ", wheelsDrive='" + wheelsDrive + '\'' + ", doors=" + doors + ", seats=" + seats
 				+ ", fuelConsumption=" + fuelConsumption + ", features=" + features + ", carClass='" + carClass + '\''
 				+ ", pricePerDay=" + pricePerDay + ", distance=" + distance + ", about='" + about + '\''
-				+ ", pickUpPlace=" + pickUpPlace + ", imageUrl=" + imageUrl + ", bookedPeriod=" + bookedPeriod + '}';
+				+ ", pickUpPlace=" + pickUpPlace + ", imageUrl=" + imageUrl + ", bookedPeriod=" + bookedPeriod
+				+ ", filter=" + filter + '}';
 	}
 
 }

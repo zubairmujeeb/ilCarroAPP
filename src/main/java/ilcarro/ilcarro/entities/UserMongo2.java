@@ -1,14 +1,14 @@
 package ilcarro.ilcarro.entities;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import ilcarro.ilcarro.dto.Comment;
 
-//@Document(collection = "users")
+@Document(collection = "users")
 public class UserMongo2 {
 	@Id
 //	@Field("email")
@@ -22,7 +22,7 @@ public class UserMongo2 {
 	private String registrationDate;
 //	private List<Comment> comments;
 //	@Field("ownCars")
-	private List<CarMongo> ownCars;
+//	private List<CarMongo> ownCars;
 //	private List<BookedCarMongo> bookedCars;
 //	private List<BookedCarMongo> history;
 
@@ -38,7 +38,7 @@ public class UserMongo2 {
 		this.password = password;
 		this.registrationDate = registrationDate;
 //		this.comments = comments;
-		this.ownCars = ownCars;
+//		this.ownCars = ownCars;
 //		this.bookedCars = bookedCars;
 //		this.history = history;
 	}
@@ -123,16 +123,16 @@ public class UserMongo2 {
 //		this.comments = comments;
 //	}
 
-	public List<CarMongo> getOwnCars() {
-		if (this.ownCars == null) {
-			return new ArrayList<>();
-		}
-		return ownCars;
-	}
-
-	public void setOwnCars(List<CarMongo> ownCars) {
-		this.ownCars = ownCars;
-	}
+//	public List<CarMongo> getOwnCars() {
+//		if (this.ownCars == null) {
+//			return new ArrayList<>();
+//		}
+//		return ownCars;
+//	}
+//
+//	public void setOwnCars(List<CarMongo> ownCars) {
+//		this.ownCars = ownCars;
+//	}
 
 	public String getPassword() {
 		return password;

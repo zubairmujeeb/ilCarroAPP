@@ -16,6 +16,7 @@ import javax.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -553,5 +554,17 @@ public class ilCarroImpl implements ilCarroService {
 			throw new IlcarroException();
 		}
 
+	}
+
+	@Override
+	public List<CarResponseDto>  searchCarsbyFilter(String make, String model, String year, String engine, String fuel,
+			String gear, String wheelDrive, int itemOnPage, int currentPage , Boolean ascending) throws IlcarroException {
+		Pageable pageable = PageRequest.of(currentPage - 1, itemOnPage);
+		try {
+			return ilCarroRepository.searchCarByFilters(make,model,year,engine,fuel,gear,wheelDrive,pageable,ascending);
+		} catch (ParseException e) {
+			throw new IlcarroException();
+		}
+		
 	}
 }

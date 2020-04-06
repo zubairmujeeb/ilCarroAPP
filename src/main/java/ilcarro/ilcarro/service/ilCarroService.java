@@ -3,6 +3,7 @@ package ilcarro.ilcarro.service;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
 import ilcarro.ilcarro.api.ilCarroReturnCode;
 import ilcarro.ilcarro.dto.Comment;
@@ -63,5 +64,8 @@ public interface ilCarroService {
 
 	List<CarResponseDto> searchCarsByCoordinates(float latitude, float longitude, float radius, int itemOnPage,
 			int currentPage) throws IlcarroException;
+
+	List<CarResponseDto> searchCarsbyFilter(String make, String model, String year, String engine, String fuel,
+			String gear, String wheelDrive, int itemOnPage, int currentPage, Boolean ascending) throws IlcarroException;
 
 }
