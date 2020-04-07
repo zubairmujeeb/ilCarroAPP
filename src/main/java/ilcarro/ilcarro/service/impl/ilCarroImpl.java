@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
@@ -16,7 +17,6 @@ import javax.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -76,8 +76,9 @@ public class ilCarroImpl implements ilCarroService {
 
 		UserMongo userMongo = new UserMongo(userRequestDto.getEmail(), userRequestDto.getFirstName(),
 				userRequestDto.getSecondName(), userRequestDto.getPhotoUrl(), userRequestDto.getPhone(),
-				bcryptEncode.encode(userRequestDto.getPassword()), getCurrentDate(), new ArrayList<Comment>(),
-				new ArrayList<CarMongo>(), new ArrayList<BookedCarMongo>(), new ArrayList<BookedCarMongo>());
+				bcryptEncode.encode(userRequestDto.getPassword()), LocalDate.now(ZoneId.of("Asia/Jerusalem")),
+				new ArrayList<Comment>(), new ArrayList<CarMongo>(), new ArrayList<BookedCarMongo>(),
+				new ArrayList<BookedCarMongo>());
 		ilCarroRepository.save(userMongo);
 
 		return toUserDto(userMongo);
@@ -138,7 +139,7 @@ public class ilCarroImpl implements ilCarroService {
 		ilCarroRepository.save(userMongo);
 
 		return toCarResponseOwnerDto(userMongo.getFirstName(), userMongo.getSecondName(),
-				userMongo.getRegistrationDate(), carMongo);
+				userMongo.getRegistrationDate().toString(), carMongo);
 	}
 
 	@Override
@@ -193,7 +194,8 @@ public class ilCarroImpl implements ilCarroService {
 
 		ilCarroRepository.save(owner);
 
-		return toCarResponseOwnerDto(owner.getFirstName(), owner.getSecondName(), owner.getRegistrationDate(), newCar);
+		return toCarResponseOwnerDto(owner.getFirstName(), owner.getSecondName(),
+				owner.getRegistrationDate().toString(), newCar);
 	}
 
 	@Override
@@ -213,7 +215,8 @@ public class ilCarroImpl implements ilCarroService {
 				.filter(carMongo -> carMongo.getSerialNumber().equals(serialNumber)).collect(Collectors.toList());
 
 		CarMongo car = cars.get(0);
-		return toCarResponseOwnerDto(user.getFirstName(), user.getSecondName(), user.getRegistrationDate(), car);
+		return toCarResponseOwnerDto(user.getFirstName(), user.getSecondName(), user.getRegistrationDate().toString(),
+				car);
 	}
 
 	@Override
@@ -410,8 +413,9 @@ public class ilCarroImpl implements ilCarroService {
 
 	private UserResponseDto toUserDto(UserMongo userMongo) {
 		return new UserResponseDto(userMongo.getFirstName(), userMongo.getSecondName(), userMongo.getEmail(),
-				userMongo.getRegistrationDate(), userMongo.getComments(), toCarResponseDtoList(userMongo.getOwnCars()),
-				toBookedCarDtoList(userMongo.getBookedCars()), toBookedCarDtoList(userMongo.getHistory()));
+				userMongo.getRegistrationDate().toString(), userMongo.getComments(),
+				toCarResponseDtoList(userMongo.getOwnCars()), toBookedCarDtoList(userMongo.getBookedCars()),
+				toBookedCarDtoList(userMongo.getHistory()));
 	}
 
 	private List<BookedCarDto> toBookedCarDtoList(List<BookedCarMongo> bookedCars) {
@@ -510,7 +514,7 @@ public class ilCarroImpl implements ilCarroService {
 			throw new IlcarroException();
 		}
 	}
-	
+
 	@Override
 	public List<CarResponseDto> searchCarsByCoordinates(float latitude, float longitude, float radius, int itemOnPage,
 			int currentPage) throws IlcarroException {
@@ -557,14 +561,16 @@ public class ilCarroImpl implements ilCarroService {
 	}
 
 	@Override
-	public List<CarResponseDto>  searchCarsbyFilter(String make, String model, String year, String engine, String fuel,
-			String gear, String wheelDrive, int itemOnPage, int currentPage , Boolean ascending) throws IlcarroException {
+	public List<CarResponseDto> searchCarsbyFilter(String make, String model, String year, String engine, String fuel,
+			String gear, String wheelDrive, int itemOnPage, int currentPage, Boolean ascending)
+			throws IlcarroException {
 		Pageable pageable = PageRequest.of(currentPage - 1, itemOnPage);
 		try {
-			return ilCarroRepository.searchCarByFilters(make,model,year,engine,fuel,gear,wheelDrive,pageable,ascending);
+			return ilCarroRepository.searchCarByFilters(make, model, year, engine, fuel, gear, wheelDrive, pageable,
+					ascending);
 		} catch (ParseException e) {
 			throw new IlcarroException();
 		}
-		
+
 	}
 }

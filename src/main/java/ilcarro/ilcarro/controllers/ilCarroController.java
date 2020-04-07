@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,8 +22,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
-import com.fasterxml.jackson.databind.jsontype.impl.AsExistingPropertyTypeSerializer;
 
 import ilcarro.ilcarro.api.ilCarroReturnCode;
 import ilcarro.ilcarro.constant.IlCarroConstant;
@@ -151,8 +148,8 @@ public class ilCarroController {
 		return ilCarroService.addComment(serialNumber, getEmail(authHeader), commentRequestDto);
 	}
 
-	@PostMapping("/car/reservation/")
-	public ReservationResponseDto makeReservation(@RequestHeader(value = "email") String authHeader,
+	@PostMapping("/car/reservation")
+	public ReservationResponseDto makeReservation(@RequestHeader(value = "Authorization") String authHeader,
 			@RequestParam("serialNumber") String serialNumber, @RequestBody ReservationRequestDto requestDto) {
 		return ilCarroService.makeReservation(getEmail(authHeader), serialNumber, requestDto);
 
