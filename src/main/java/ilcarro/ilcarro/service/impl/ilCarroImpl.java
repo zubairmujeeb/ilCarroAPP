@@ -283,7 +283,7 @@ public class ilCarroImpl implements ilCarroService {
 		long orderId = getNewOrderId();
 		float amount = ChronoUnit.DAYS.between(reservationRequestDto.getStartDate(), reservationRequestDto.getEndDate())
 				* car.getPricePerDay();
-		LocalDate bookingDate = LocalDate.now();
+		LocalDate bookingDate = LocalDate.now(ZoneId.of("Asia/Jerusalem"));
 		car.getBookedPeriod().add(new OwnerBookedPeriod(orderId, reservationRequestDto.getStartDate(),
 				reservationRequestDto.getEndDate(), false, amount, bookingDate,
 				new Renter(renter.getEmail(), renter.getFirstName(), renter.getSecondName(), renter.getPhone())));

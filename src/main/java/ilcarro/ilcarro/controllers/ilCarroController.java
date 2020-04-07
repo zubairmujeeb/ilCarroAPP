@@ -3,6 +3,7 @@ package ilcarro.ilcarro.controllers;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +24,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ilcarro.ilcarro.api.ilCarroReturnCode;
 import ilcarro.ilcarro.constant.IlCarroConstant;
 import ilcarro.ilcarro.dto.Comment;
+import ilcarro.ilcarro.dto.JwtBody;
 import ilcarro.ilcarro.dto.bookingDto.BookedPeriodDto;
 import ilcarro.ilcarro.dto.carDto.CarRequestDto;
 import ilcarro.ilcarro.dto.carDto.CarResponseDto;
@@ -49,9 +55,22 @@ public class ilCarroController {
 	@Autowired
 	private ilCarroService ilCarroService;
 
-	private String getEmail(String authHeader) {
+	private String getEmail(String authHeader) throws JsonMappingException, JsonProcessingException {
 		if (authHeader != null) {
-			return authHeader;
+
+			String[] parts = authHeader.split("\\.");
+			String base64EncodedHeader = parts[0];
+			String base64EncodedBody = parts[1];
+			String base64EncodedSignature = parts[2];
+
+			Base64 base64Url = new Base64(true);
+
+			System.out.println("~~~~~~~~~ JWT Body ~~~~~~~");
+			String body = new String(base64Url.decode(base64EncodedBody));
+			ObjectMapper mapper = new ObjectMapper();
+			JwtBody jwtBody = mapper.readValue(body, JwtBody.class);
+			return jwtBody.getSub();
+
 		} else {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 		}
@@ -144,14 +163,24 @@ public class ilCarroController {
 
 	@PostMapping("/comment/add")
 	public Comment addComment(@RequestHeader(value = "email") String authHeader,
-			@RequestParam("serialNumber") String serialNumber, @RequestBody CommentRequestDto commentRequestDto) {
-		return ilCarroService.addComment(serialNumber, getEmail(authHeader), commentRequestDto);
+			@RequestParam("serialNumber") String serialNumber, @RequestBody CommentRequestDto commentRequestDto)
+			throws IlcarroException {
+		try {
+			return ilCarroService.addComment(serialNumber, getEmail(authHeader), commentRequestDto);
+		} catch (JsonProcessingException e) {
+			throw new IlcarroException();
+		}
 	}
 
 	@PostMapping("/car/reservation")
 	public ReservationResponseDto makeReservation(@RequestHeader(value = "Authorization") String authHeader,
-			@RequestParam("serialNumber") String serialNumber, @RequestBody ReservationRequestDto requestDto) {
-		return ilCarroService.makeReservation(getEmail(authHeader), serialNumber, requestDto);
+			@RequestParam("serialNumber") String serialNumber, @RequestBody ReservationRequestDto requestDto)
+			throws IlcarroException {
+		try {
+			return ilCarroService.makeReservation(getEmail(authHeader), serialNumber, requestDto);
+		} catch (JsonProcessingException e) {
+			throw new IlcarroException();
+		}
 
 	}
 
@@ -221,10 +250,10 @@ public class ilCarroController {
 			@RequestParam(name = "wheels_drive", defaultValue = "0") String wheelDrive,
 			@RequestParam(name = "itemOnPage", defaultValue = "0") int itemOnPage,
 			@RequestParam(name = "currentPage", defaultValue = "0") int currentPage,
-			@RequestParam(name = "ascending", defaultValue = "true") Boolean ascending ) throws IlcarroException {
+			@RequestParam(name = "ascending", defaultValue = "true") Boolean ascending) throws IlcarroException {
 		ResponseEntity<?> responseEntity;
 		try {
-			List<CarResponseDto>  dataList = ilCarroService.searchCarsbyFilter(make, model, year, engine, fuel, gear,
+			List<CarResponseDto> dataList = ilCarroService.searchCarsbyFilter(make, model, year, engine, fuel, gear,
 					wheelDrive, itemOnPage, currentPage, ascending);
 			responseEntity = new ResponseEntity<>(dataList, HttpStatus.OK);
 		} catch (IlcarroException e) {
@@ -235,5 +264,4 @@ public class ilCarroController {
 		return responseEntity;
 
 	}
-
 }
