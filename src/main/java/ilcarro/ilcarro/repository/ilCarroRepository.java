@@ -3,16 +3,11 @@ package ilcarro.ilcarro.repository;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import ilcarro.ilcarro.dto.Comment;
-import ilcarro.ilcarro.dto.carDto.CarResponseDto;
-import ilcarro.ilcarro.dto.carDto.CarResponseOwnerDto;
 import ilcarro.ilcarro.entities.UserMongo;
 
 @Repository
@@ -35,6 +30,9 @@ public interface ilCarroRepository extends MongoRepository<UserMongo, String>, C
 	@Query(value = "{'ownCars.bookedPeriod.orderId': ?0}", fields = "{'ownCars.bookedPeriod.orderId': 1}")
 	long findByOwnCarsBookedPeriodOrderId(long orderId);
 
+	@Query(value = "{'ownCars.bookedPeriod.orderId': ?0}")
+	UserMongo findOwnerByOrderId(long orderId);
+
 	@Query(value = "{$and:[{'email':?0} , {'ownCars.serialNumber':?1}]}", fields = "{'ownCars.bookedPeriod' : 1, _id : 0}")
 	UserMongo findCarBookedPeriodsByOwnerEmailAndSerialNumber(String email, String serialNumber);
 
@@ -55,7 +53,5 @@ public interface ilCarroRepository extends MongoRepository<UserMongo, String>, C
 	List<UserMongo> findTop3ByOrderByOwnCarsBookedPeriod();
 
 	UserMongo findTopByOrderByOwnCarsBookedPeriodOrderId();
-
-	
 
 }

@@ -9,7 +9,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.TimeZone;
+import java.util.Timer;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -37,6 +40,7 @@ import ilcarro.ilcarro.dto.carDto.CarResponseDto;
 import ilcarro.ilcarro.dto.carDto.CarResponseOwnerDto;
 import ilcarro.ilcarro.dto.carDto.OwnerDto;
 import ilcarro.ilcarro.dto.commentDto.CommentRequestDto;
+import ilcarro.ilcarro.dto.reservationDto.ConfirmReservationRequestDto;
 import ilcarro.ilcarro.dto.reservationDto.ReservationRequestDto;
 import ilcarro.ilcarro.dto.reservationDto.ReservationResponseDto;
 import ilcarro.ilcarro.dto.userDto.UserRequestDto;
@@ -52,9 +56,16 @@ import ilcarro.ilcarro.exceptions.errors.UserNotFoundException;
 import ilcarro.ilcarro.repository.CarResponseRepository;
 import ilcarro.ilcarro.repository.ilCarroRepository;
 import ilcarro.ilcarro.service.ilCarroService;
+import ilcarro.ilcarro.timertasks.PaymentRecievedChecker;
 
 @Service
 public class ilCarroImpl implements ilCarroService {
+
+	public static final String ALPHA_NUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+	@Autowired
+	private Map<Long, String> confCodeMap;
+
 	@Resource(name = "mongoTemplate")
 	MongoTemplate mongoTemplate;
 	@Autowired
@@ -289,20 +300,72 @@ public class ilCarroImpl implements ilCarroService {
 				new Renter(renter.getEmail(), renter.getFirstName(), renter.getSecondName(), renter.getPhone())));
 		renter.getBookedCars().add(new BookedCarMongo(serialNumber, new RenterBookedPeriod(orderId,
 				reservationRequestDto.getStartDate(), reservationRequestDto.getEndDate(), false, amount, bookingDate)));
+
 		ilCarroRepository.save(owner);
 		ilCarroRepository.save(renter);
-		Thread thread = new Thread() {
-			public void run() {
-				try {
-					this.sleep(10000);
-					confPayment(orderId, serialNumber, owner.getEmail(), email);
-				} catch (InterruptedException e) {
-					System.out.println(e);
+
+		confCodeMap.put(orderId, generateConfirmationCode());
+
+		PaymentRecievedChecker paymentRecievedChecker = new PaymentRecievedChecker(orderId, serialNumber,
+				owner.getEmail(), renter.getEmail(), ilCarroRepository, confCodeMap);
+		Timer timer = new Timer();
+		timer.schedule(paymentRecievedChecker, 10000);
+
+		return new ReservationResponseDto(orderId, amount, bookingDate);
+	}
+
+	@Override
+	public void confirmReservation(ConfirmReservationRequestDto requestDto) {
+
+		if (confCodeMap.containsKey(requestDto.getOrderId())
+				&& confCodeMap.get(requestDto.getOrderId()).equalsIgnoreCase(requestDto.getConfirmationCode())) {
+
+			confCodeMap.remove(requestDto.getOrderId());
+			UserMongo owner = ilCarroRepository.findOwnerByOrderId(requestDto.getOrderId());
+
+			CarMongo ownCar = null;
+			OwnerBookedPeriod bookedPeriod = null;
+
+			for (CarMongo oc : owner.getOwnCars()) {
+				for (OwnerBookedPeriod bp : oc.getBookedPeriod()) {
+					if (bookedPeriod.getOrderId() == requestDto.getOrderId()) {
+						ownCar = oc;
+						bookedPeriod = bp;
+					}
 				}
 			}
-		};
-		thread.run();
-		return new ReservationResponseDto(orderId, amount, bookingDate);
+
+			if (ownCar != null && bookedPeriod != null) {
+				UserMongo renter = ilCarroRepository.findById(bookedPeriod.getPersonWhoBooked().getEmail())
+						.orElseThrow(() -> new UserNotFoundException("No User Found"));
+
+				BookedCarMongo bookedCarMongo = renter.getBookedCars().stream()
+						.filter(c -> c.getBookedPeriod().getOrderId() == requestDto.getOrderId()).findFirst()
+						.orElse(null);
+
+				bookedPeriod.setPaid(true);
+				bookedCarMongo.getBookedPeriod().setPaid(true);
+
+				ilCarroRepository.save(owner);
+				ilCarroRepository.save(renter);
+
+			}
+		}
+
+	}
+
+	private String generateConfirmationCode() {
+
+		int len = 6;
+
+		Random rndm_method = new Random();
+
+		char[] confirmationCode = new char[len];
+
+		for (int i = 0; i < len; i++) {
+			confirmationCode[i] = ALPHA_NUMERIC.charAt(rndm_method.nextInt(ALPHA_NUMERIC.length()));
+		}
+		return new String(confirmationCode);
 	}
 
 	private void confPayment(long orderId, String serialNumber, String ownerEmail, String renterEmail) {

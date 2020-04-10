@@ -3,7 +3,6 @@ package ilcarro.ilcarro.service;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 
 import ilcarro.ilcarro.api.ilCarroReturnCode;
 import ilcarro.ilcarro.dto.Comment;
@@ -12,6 +11,7 @@ import ilcarro.ilcarro.dto.carDto.CarRequestDto;
 import ilcarro.ilcarro.dto.carDto.CarResponseDto;
 import ilcarro.ilcarro.dto.carDto.CarResponseOwnerDto;
 import ilcarro.ilcarro.dto.commentDto.CommentRequestDto;
+import ilcarro.ilcarro.dto.reservationDto.ConfirmReservationRequestDto;
 import ilcarro.ilcarro.dto.reservationDto.ReservationRequestDto;
 import ilcarro.ilcarro.dto.reservationDto.ReservationResponseDto;
 import ilcarro.ilcarro.dto.userDto.UserRequestDto;
@@ -50,6 +50,8 @@ public interface ilCarroService {
 	ReservationResponseDto makeReservation(String email, String serialNumber,
 			ReservationRequestDto reservationRequestDto);
 
+	void confirmReservation(ConfirmReservationRequestDto requestDto);
+
 	List<UserResponseDto> getThreePopularCars();
 
 	List<Comment> comments();
@@ -59,8 +61,8 @@ public interface ilCarroService {
 	List<CarResponseOwnerDto> findByBookedPeriod(String city, String startDate, String endDate, String minAmount,
 			String maxAmount, String ascending, String itemOnPage, String currentPage);
 
-	Page<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate,
-			double minAmount, double maxAmount, boolean ascending, int itemOnPage, int currentPage) throws IlcarroException;
+	Page<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate, double minAmount,
+			double maxAmount, boolean ascending, int itemOnPage, int currentPage) throws IlcarroException;
 
 	List<CarResponseDto> searchCarsByCoordinates(float latitude, float longitude, float radius, int itemOnPage,
 			int currentPage) throws IlcarroException;

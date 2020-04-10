@@ -37,6 +37,7 @@ import ilcarro.ilcarro.dto.carDto.CarRequestDto;
 import ilcarro.ilcarro.dto.carDto.CarResponseDto;
 import ilcarro.ilcarro.dto.carDto.CarResponseOwnerDto;
 import ilcarro.ilcarro.dto.commentDto.CommentRequestDto;
+import ilcarro.ilcarro.dto.reservationDto.ConfirmReservationRequestDto;
 import ilcarro.ilcarro.dto.reservationDto.ReservationRequestDto;
 import ilcarro.ilcarro.dto.reservationDto.ReservationResponseDto;
 import ilcarro.ilcarro.dto.userDto.UserRequestDto;
@@ -181,6 +182,15 @@ public class ilCarroController {
 		} catch (JsonProcessingException e) {
 			throw new IlcarroException();
 		}
+
+	}
+
+	@PostMapping("/reservation/confirm")
+	public ilCarroReturnCode confirmReservation(@RequestHeader(value = "Authorization") String authHeader,
+			@RequestBody ConfirmReservationRequestDto requestDto) throws IlcarroException {
+
+		ilCarroService.confirmReservation(requestDto);
+		return ilCarroReturnCode.OK;
 
 	}
 
