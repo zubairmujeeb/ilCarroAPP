@@ -311,7 +311,7 @@ public class ilCarroImpl implements ilCarroService {
 		Timer timer = new Timer();
 		timer.schedule(paymentRecievedChecker, 10000);
 
-		return new ReservationResponseDto(orderId, amount, bookingDate);
+		return new ReservationResponseDto(orderId, amount, bookingDate,confCodeMap.get(orderId));
 	}
 
 	@Override
@@ -356,7 +356,7 @@ public class ilCarroImpl implements ilCarroService {
 
 	private String generateConfirmationCode() {
 
-		int len = 6;
+		int len = 9;
 
 		Random rndm_method = new Random();
 
