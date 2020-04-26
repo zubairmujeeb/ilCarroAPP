@@ -1,0 +1,211 @@
+package ilcarro.ilcarro.repository;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.geo.Circle;
+import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.LimitOperation;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
+import org.springframework.data.mongodb.core.aggregation.SkipOperation;
+import org.springframework.data.mongodb.core.aggregation.SortOperation;
+import org.springframework.data.mongodb.core.aggregation.UnwindOperation;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+
+import ilcarro.ilcarro.dto.Comment;
+import ilcarro.ilcarro.dto.CountDto;
+import ilcarro.ilcarro.dto.carDto.CarFilterDto;
+import ilcarro.ilcarro.dto.carDto.CarResponseDto;
+import ilcarro.ilcarro.dto.carDto.Engine;
+import ilcarro.ilcarro.dto.carDto.Fuel;
+import ilcarro.ilcarro.dto.carDto.Gear;
+import ilcarro.ilcarro.dto.carDto.Model;
+import ilcarro.ilcarro.dto.carDto.WheelsDrive;
+import ilcarro.ilcarro.dto.carDto.Year;
+import ilcarro.ilcarro.entities.UserMongo;
+import ilcarro.ilcarro.entities.UserMongo2;
+
+public class CustomRepositoryImpl implements CustomRepository {
+	MongoTemplate mongoTemplate;
+
+	@Autowired
+	public CustomRepositoryImpl(MongoTemplate mongoTemplate) {
+		this.mongoTemplate = mongoTemplate;
+	}
+
+	@Override
+	public List<UserMongo> getThreePopularCars() {
+		Query query = new Query();
+		query.addCriteria(Criteria.where("ownCars.bookedPeriod").gte(10));
+		query.with(Sort.by(Sort.Order.desc("ownCars.bookedPeriod"))).limit(3);
+		return mongoTemplate.find(query, UserMongo.class);
+	}
+
+	@Override
+	public List<Comment> getLatestComments() {
+		Query query = new Query();
+		query.addCriteria(Criteria.where("comments.firstName").is("nir"));
+		// query.with(Sort.by(Sort.Order.desc("firstName"))).limit(6);
+		return mongoTemplate.find(query, Comment.class);
+	}
+
+//	@Override
+//	public List<UserMongo> searchCarAgainstBookedPeriod(String city, String startDate, String endDate, double minAmount,
+//			double maxAmount, boolean ascending, int itemOnPage, int currentPage) throws ParseException {
+//
+//		SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+//
+//		Query query = new Query();
+//
+//		Criteria dateCriteria = new Criteria().andOperator(
+//				Criteria.where("ownCars.bookedPeriod.startDate").gte(sdf.parse(startDate)),
+//				Criteria.where("ownCars.bookedPeriod.endDate").lte(sdf.parse(endDate)));
+//
+//		Criteria amountCriteria = Criteria.where("bookedPeriod.amount").lt(maxAmount).gt(minAmount);
+//		query.addCriteria(Criteria.where("ownCars").elemMatch(new Criteria().orOperator(dateCriteria, amountCriteria,
+//				Criteria.where("pickUpPlace.placeId").is(city))));
+//		query.fields().include("firstName").include("secondName").include("registrationDate").include("ownCars.$");
+//
+//		final Pageable pageableRequest = PageRequest.of(currentPage - 1, itemOnPage);
+//		query.with(pageableRequest);
+//
+//		return mongoTemplate.find(query, UserMongo.class);
+//
+//	}
+
+	@Override
+	public Page<CarResponseDto> searchCarAgainstBookedPeriod(String city, String startDate, String endDate,
+			double minAmount, double maxAmount, boolean ascending, Pageable pageable) throws ParseException {
+
+		SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+
+		UnwindOperation unwindOperation = Aggregation.unwind("ownCars");
+
+		Criteria dateCriteria = new Criteria().andOperator(
+				Criteria.where("ownCars.bookedPeriod.startDate").gte(sdf.parse(startDate)),
+				Criteria.where("ownCars.bookedPeriod.endDate").lte(sdf.parse(endDate)));
+
+		Criteria amountCriteria = null;
+
+		if (maxAmount > 0 || minAmount > 0) {
+
+			amountCriteria = Criteria.where("bookedPeriod.amount");
+			if (maxAmount > 0)
+				amountCriteria.lte(maxAmount);
+			if (minAmount > 0)
+				amountCriteria.gte(minAmount);
+		}
+
+		Criteria finalCriteria = amountCriteria != null
+				? new Criteria().orOperator(Criteria.where("ownCars.pickUpPlace.placeId").regex(city), dateCriteria,
+						amountCriteria)
+				: new Criteria().orOperator(Criteria.where("ownCars.pickUpPlace.placeId").regex(city), dateCriteria);
+
+		MatchOperation matchOperation = Aggregation.match(finalCriteria);
+
+		SkipOperation skipOperation = Aggregation.skip((long) pageable.getPageNumber() * pageable.getPageSize());
+		LimitOperation limitOperation = Aggregation.limit(pageable.getPageSize());
+		SortOperation sortOperation = Aggregation.sort(ascending ? Direction.ASC : Direction.DESC,
+				"$ownCars.serialNumber");
+
+		Long total = mongoTemplate
+				.aggregate(Aggregation.newAggregation(unwindOperation, matchOperation, Aggregation.count().as("count"),
+						Aggregation.project("count").andExclude("_id")), UserMongo.class, CountDto.class)
+				.getMappedResults().get(0).getCount();
+
+		ProjectionOperation projectOperation = Aggregation
+				.project("$ownCars.serialNumber", "$ownCars.make", "$ownCars.model", "$ownCars.year", "$ownCars.engine",
+						"$ownCars.fuel", "$ownCars.gear", "$ownCars.wheelsDrive", "$ownCars.doors", "$ownCars.seats",
+						"$ownCars.fuelConsumption", "$ownCars.features", "$ownCars.carClass", "$ownCars.pricePerDay",
+						"$ownCars.distance", "$ownCars.about", "$ownCars.pickUpPlace", "$ownCars.imageUrl",
+						"$ownCars.bookedPeriod")
+				.and("firstName").as("owner.firstName").and("secondName").as("owner.secondName").and("registrationDate")
+				.as("owner.registrationDate");
+
+		return new PageImpl<CarResponseDto>(
+				mongoTemplate
+						.aggregate(
+								Aggregation.newAggregation(unwindOperation, matchOperation, skipOperation,
+										limitOperation, sortOperation, projectOperation),
+								UserMongo.class, CarResponseDto.class)
+						.getMappedResults(),
+				pageable, total);
+
+	}
+
+	@Override
+	public List<UserMongo> searchCarByCoordinates(float latitude, float longitude, float radius, int itemOnPage,
+			int currentPage) throws ParseException {
+		Point basePoint = new Point(latitude, longitude);
+		Circle area = new Circle(basePoint, radius);
+		Query query = new Query();
+		query.addCriteria(Criteria.where("ownCars.pickUpPlace").withinSphere(area));
+		query.fields().include("ownCars");
+		final Pageable pageableRequest = PageRequest.of(currentPage, itemOnPage);
+		query.with(pageableRequest);
+		return mongoTemplate.find(query, UserMongo.class);
+	}
+
+	@Override
+	public List<CarResponseDto> searchCarByFilters(String make, String model, String year, String engine,
+			String fuel, String gear, String wheelDrive, Pageable pageable, Boolean ascending) throws ParseException {
+		UnwindOperation unwindOperation = Aggregation.unwind("ownCars");
+		Criteria criteria = new Criteria().andOperator(Criteria.where("ownCars.make").is(make),
+				Criteria.where("ownCars.model").is(model), Criteria.where("ownCars.year").is(Integer.parseInt(year)),
+				Criteria.where("ownCars.engine").is(engine), Criteria.where("ownCars.fuel").is(fuel),
+				Criteria.where("ownCars.gear").is(gear), Criteria.where("ownCars.wheelsDrive").is(wheelDrive));
+		MatchOperation matchOperation = Aggregation.match(criteria);
+		SkipOperation skipOperation = Aggregation.skip((long) pageable.getPageNumber() * pageable.getPageSize());
+		LimitOperation limitOperation = Aggregation.limit(pageable.getPageSize());
+		SortOperation sortOperation = Aggregation.sort(ascending ? Direction.ASC : Direction.DESC,
+				"$ownCars.serialNumber");
+		Long total = mongoTemplate
+				.aggregate(Aggregation.newAggregation(unwindOperation, matchOperation, Aggregation.count().as("count"),
+						Aggregation.project("count").andExclude("_id")), UserMongo.class, CountDto.class)
+				.getMappedResults().get(0).getCount();
+		ProjectionOperation projectOperation = Aggregation
+				.project("$ownCars.serialNumber", "$ownCars.make", "$ownCars.model", "$ownCars.year", "$ownCars.engine",
+						"$ownCars.fuel", "$ownCars.gear", "$ownCars.wheelsDrive", "$ownCars.doors", "$ownCars.seats",
+						"$ownCars.fuelConsumption", "$ownCars.features", "$ownCars.carClass", "$ownCars.pricePerDay",
+						"$ownCars.distance", "$ownCars.about", "$ownCars.pickUpPlace", "$ownCars.imageUrl",
+						"$ownCars.bookedPeriod")
+				.and("firstName").as("owner.firstName").and("secondName").as("owner.secondName").and("registrationDate")
+				.as("owner.registrationDate");
+		
+		
+				List<CarResponseDto> filterdCarResponse=mongoTemplate
+						.aggregate(Aggregation.newAggregation(unwindOperation, matchOperation, skipOperation,
+								limitOperation, sortOperation, projectOperation), UserMongo.class, CarResponseDto.class)
+						.getMappedResults();
+				CarFilterDto attachFilterDtoWithResponse = new CarFilterDto();
+				attachFilterDtoWithResponse.setMake(make);
+				attachFilterDtoWithResponse.setModels(new Model(model, new Year(year,  new Engine(engine, new Fuel(fuel, new Gear(gear , new WheelsDrive(wheelDrive)))))));
+				filterdCarResponse.forEach(p -> p.setFilter(attachFilterDtoWithResponse));
+				filterdCarResponse.forEach(p->p.setTotalItems(Long.toString(total)));
+				filterdCarResponse.forEach(p->p.setItemOnPage(pageable.getPageSize()));
+				filterdCarResponse.forEach(p->p.setCurrentPage(pageable.getPageNumber()));
+				
+				
+		
+//		return new PageImpl<CarResponseDto>(
+//				mongoTemplate
+//						.aggregate(Aggregation.newAggregation(unwindOperation, matchOperation, skipOperation,
+//								limitOperation, sortOperation, projectOperation), UserMongo.class, CarResponseDto.class)
+//						.getMappedResults(),
+//				pageable, total);
+				
+			return 	 filterdCarResponse;
+	}
+}
